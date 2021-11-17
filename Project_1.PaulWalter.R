@@ -32,15 +32,15 @@
   # METHODS
   # ================================================================@ 
   
-  ACCEPTABLE_SKEW = 
+  ACCEPTABLE_SKEW = 1
     
   NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store')
   
   # skewness(aboriginal_non_ratio, na.rm = TRUE)
   checkSkewness <- function( vectorToCheck ) {
     # last line is the return statement
-    print(vectorToCheck)
-    print( skewness(vectorToCheck, na.rm = TRUE) )
+    #print(vectorToCheck)
+    skewness(vectorToCheck, na.rm = TRUE)
   }
   
   # ================================================================
@@ -70,9 +70,6 @@
   dataStateAndCounty <- read.csv("data/StateAndCountyData.csv") 
   dataStateAndCountyFiltered <- filter( dataStateAndCounty, Variable_Code %in% filteredByYear_VariableCode)
   
-  
-  
-  
   # ================================================================
   # PIVOT THE DATA
   #
@@ -80,14 +77,18 @@
   #
   #   @see https://tidyr.tidyverse.org/articles/pivot.html#wider
   # ================================================================
-  
-  # fish_encounters %>% pivot_wider(names_from = station, values_from = seen)
-  dataStateAndCountyFiltered  %>% pivot_wider(names_from = Variable_Code , values_from = Value)
-  
-  
+  pivoted <- pivot_wider(dataStateAndCountyFiltered, names_from = Variable_Code , values_from = Value)
+  #write.csv(pivoted, "data/output_pivoted.csv")
   # ================================================================
   # FILTER DATA BY ACCEPTABLE SKEWNESS
   # ================================================================ 
+  
+  # ignore the first 4 columns
+  newdata <- pivoted[,4:ncol(pivoted)]
+  newdata
+  
+  # apply to all the columns https://stackoverflow.com/questions/7303322/apply-function-to-each-column-in-a-data-frame-observing-each-columns-existing-da
+  sapply(newdata, checkSkewness )
   
   # lapply(dataStateAndCountyFiltered$Value, checkSkewness)
   #by_county <- dataStateAndCountyFiltered %>% group_by(County)
