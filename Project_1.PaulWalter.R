@@ -63,10 +63,12 @@ filterRows()
   
   filteredByYear <- filter(filteredByType, grepl('2016', Variable_Name) )
   
+  filteredByYear_VariableCode = filteredByYear$Variable_Code
+  
   #variableList %>% filter(Units == '# per 1,000 pop' & grepl('2016', Variable_Name)) 
   ## 
   
-  filteredByYear
+  filteredByYear_VariableCode
   
   # ================================================================
   # Get found  Variables
@@ -76,6 +78,8 @@ filterRows()
   #           starwars %>% filter(eye_color %in% c('blue', 'yellow', 'red'))
   # ================================================================ 
   dataStateAndCounty <- read.csv("data/StateAndCountyData.csv") 
-  dataStateAndCounty %>% select(Variable_Code %in% variableListFiltered$Variable_Code)
+  dataStateAndCountyFiltered <- filter( dataStateAndCounty, Variable_Code %in% filteredByYear_VariableCode)
+  
+  dataStateAndCountyFiltered
   
   
