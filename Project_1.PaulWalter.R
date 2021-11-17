@@ -40,7 +40,7 @@
   
   ACCEPTABLE_SKEW = 1
     
-  NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store')
+  NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store', "Dollars")
   
   # skewness(aboriginal_non_ratio, na.rm = TRUE)
   checkSkewness <- function( vectorToCheck ) {
@@ -50,7 +50,7 @@
   }
   
   # OPEN, FILTER, and PIVOT.
-  openFilterAndPivot <- function( csvToOpenVariable, csvToOpenData, textInVariablesToSearch ) {
+  openFilterTwiceAndPivot <- function( csvToOpenVariable, csvToOpenData, textInVariablesToSearch, accetpableVariables, isVerbose = FALSE ) {
     
     # ================================================================
     # IDENTIFY VARIABLES (By Year and Type)
@@ -59,15 +59,19 @@
     # ================================================================ 
     variableList <- read.csv(csvToOpenVariable) 
     
-    filteredByType <- filter(variableList, Units %in% NUMERIC_VARIABLES )
+    filteredByType <- filter(variableList, Units %in% accetpableVariables )
     
     filteredByYear <- filter(filteredByType, grepl(textInVariablesToSearch, Variable_Name) )
     
-    print(filteredByYear)
-    
+    if( isVerbose){
+      print(filteredByYear)
+    }
+   
     filteredByYear_VariableCode = filteredByYear$Variable_Code
     
-    filteredByYear_VariableCode
+    if( isVerbose){
+      print(filteredByYear_VariableCode)
+    }
     
     # ================================================================
     # FILTER DATA BY SELECTED VARIABLES
@@ -87,13 +91,50 @@
     # write.csv(pivoted, "data/output_pivoted.csv")
   }
   
+  # OPEN, FILTER, and PIVOT.
+  openFilterAndPivot <- function( csvToOpenData, textInVariablesToSearch, isVerbose = FALSE ) {
+    
+    # ================================================================
+    # IDENTIFY VARIABLES (By Year and Type)
+    #
+    #   @see https://www.statology.org/filter-rows-r/
+    # ================================================================ 
+    variableList <- read.csv(csvToOpenData) 
+      
+    variableList <- filter(variableList, grepl(textInVariablesToSearch, Variable_Code) )
+    
+    if( isVerbose){
+      print(variableList)
+    }
+    
+    filteredByYear_VariableCode = variableList$Variable_Code
+    
+    if( isVerbose){
+      print(filteredByYear_VariableCode)
+    }
+    
+    # ================================================================
+    # PIVOT THE DATA
+    #
+    #   The data has a list of all the variables as rows, we need these as columns
+    #
+    #   @see https://tidyr.tidyverse.org/articles/pivot.html#wider
+    # ================================================================
+    pivoted <- pivot_wider(variableList, names_from = Variable_Code , values_from = Value)
+    # pivoted <- na.omit(pivoted)
+    # write.csv(pivoted, "data/output_pivoted.csv")
+  }
+  
   
   #Set the number of numeric digits to work with
   options(digits = 9)
   
-  #pivoted = openFilterAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2015");
+  pivoted2015 = openFilterTwiceAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2015", NUMERIC_VARIABLES, FALSE);
+  pivoted2016 = openFilterTwiceAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2016", c("Count"), FALSE);
+  pivotedPopulationPerCounty = openFilterAndPivot( "data/SupplementalDataCounty.csv", "2016", FALSE);
   
-  pivoted = openFilterAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2016");
+  pivotedPopulationPerCounty
+  
   
   # ================================================================
   # FILTER DATA BY ACCEPTABLE SKEWNESS
