@@ -25,23 +25,26 @@
   # @ see https://www.datanovia.com/en/lessons/transform-data-to-normal-distribution-in-r/
   library(moments)
 
-# ================================================================
-# Methods
-# ================================================================@ 
-
-NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store')
-
-# skewness(aboriginal_non_ratio, na.rm = TRUE)
-checkSkewness <- function( vectorToCheck ) {
-  # last line is the return statement
-  skewness(vectorToCheck, na.rm = TRUE)
-}
-
-filterRows()
-
+  # Pivot Tables (wider)
+  library(tidyr)
 
   # ================================================================
-  # Find Variables
+  # METHODS
+  # ================================================================@ 
+  
+  ACCEPTABLE_SKEW = 
+    
+  NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store')
+  
+  # skewness(aboriginal_non_ratio, na.rm = TRUE)
+  checkSkewness <- function( vectorToCheck ) {
+    # last line is the return statement
+    print(vectorToCheck)
+    print( skewness(vectorToCheck, na.rm = TRUE) )
+  }
+  
+  # ================================================================
+  # IDENTIFY VARIABLES (By Year and Type)
   #
   #   @see https://www.statology.org/filter-rows-r/
   # ================================================================ 
@@ -53,33 +56,38 @@ filterRows()
   
   variableList <- read.csv("data/VariableList.csv") 
 	
-  attach(variableList)
-  
-	
-  # FILTER ON YEAR
-  #   variableList %>% filter(Units == 'Percent')
-  #   variableList %>% filter(grepl('2016', Variable_Name) & Units == 'Percent') 
   filteredByType <- filter(variableList, Units %in% NUMERIC_VARIABLES )
   
-  filteredByYear <- filter(filteredByType, grepl('2016', Variable_Name) )
+  filteredByYear <- filter(filteredByType, grepl('2015', Variable_Name) )
   
   filteredByYear_VariableCode = filteredByYear$Variable_Code
-  
-  #variableList %>% filter(Units == '# per 1,000 pop' & grepl('2016', Variable_Name)) 
-  ## 
   
   filteredByYear_VariableCode
   
   # ================================================================
-  # Get found  Variables
-  # 
-  #   NOTE:   We can also filter for rows where the eye color is in a list of colors:
-  #   
-  #           starwars %>% filter(eye_color %in% c('blue', 'yellow', 'red'))
+  # FILTER DATA BY SELECTED VARIABLES
   # ================================================================ 
   dataStateAndCounty <- read.csv("data/StateAndCountyData.csv") 
   dataStateAndCountyFiltered <- filter( dataStateAndCounty, Variable_Code %in% filteredByYear_VariableCode)
   
-  dataStateAndCountyFiltered
   
   
+  
+  # ================================================================
+  # PIVOT THE DATA
+  #
+  #   The data has a list of all the variables as rows, we need these as columns
+  #
+  #   @see https://tidyr.tidyverse.org/articles/pivot.html#wider
+  # ================================================================
+  
+  # fish_encounters %>% pivot_wider(names_from = station, values_from = seen)
+  dataStateAndCountyFiltered  %>% pivot_wider(names_from = Variable_Code , values_from = Value)
+  
+  
+  # ================================================================
+  # FILTER DATA BY ACCEPTABLE SKEWNESS
+  # ================================================================ 
+  
+  # lapply(dataStateAndCountyFiltered$Value, checkSkewness)
+  #by_county <- dataStateAndCountyFiltered %>% group_by(County)
