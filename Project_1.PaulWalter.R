@@ -26,10 +26,25 @@
   library(moments)
 
 # ================================================================
-# Find Variables
-#
-#   @see https://www.statology.org/filter-rows-r/
+# Methods
 # ================================================================@ 
+
+NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store')
+
+# skewness(aboriginal_non_ratio, na.rm = TRUE)
+checkSkewness <- function( vectorToCheck ) {
+  # last line is the return statement
+  skewness(vectorToCheck, na.rm = TRUE)
+}
+
+filterRows()
+
+
+  # ================================================================
+  # Find Variables
+  #
+  #   @see https://www.statology.org/filter-rows-r/
+  # ================================================================ 
 
 
 	
@@ -39,6 +54,28 @@
   variableList <- read.csv("data/VariableList.csv") 
 	
   attach(variableList)
-  names(variableList)
-	#variableList %>% filter(Units == 'Percent')
-  variableList %>% filter(grepl('2015', Variable_Name) & Units == 'Percent') 
+  
+	
+  # FILTER ON YEAR
+  #   variableList %>% filter(Units == 'Percent')
+  #   variableList %>% filter(grepl('2016', Variable_Name) & Units == 'Percent') 
+  filteredByType <- filter(variableList, Units %in% NUMERIC_VARIABLES )
+  
+  filteredByYear <- filter(filteredByType, grepl('2016', Variable_Name) )
+  
+  #variableList %>% filter(Units == '# per 1,000 pop' & grepl('2016', Variable_Name)) 
+  ## 
+  
+  filteredByYear
+  
+  # ================================================================
+  # Get found  Variables
+  # 
+  #   NOTE:   We can also filter for rows where the eye color is in a list of colors:
+  #   
+  #           starwars %>% filter(eye_color %in% c('blue', 'yellow', 'red'))
+  # ================================================================ 
+  dataStateAndCounty <- read.csv("data/StateAndCountyData.csv") 
+  dataStateAndCounty %>% select(Variable_Code %in% variableListFiltered$Variable_Code)
+  
+  
