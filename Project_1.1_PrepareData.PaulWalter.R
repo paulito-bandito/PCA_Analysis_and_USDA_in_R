@@ -28,6 +28,8 @@
   # Pivot Tables (wider)
   library(tidyr)
 
+  # 
+  library("zoo")
 
   # PCA
   library("FactoMineR")
@@ -40,7 +42,8 @@
   
   ACCEPTABLE_SKEW = 1
     
-  NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store', "Dollars")
+  #NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store', "Dollars", "# per 1,000 pop")
+  NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store', "Dollars", "# per 1,000 pop")
   
   # skewness(aboriginal_non_ratio, na.rm = TRUE)
   checkSkewness <- function( vectorToCheck ) {
@@ -125,32 +128,129 @@
     # write.csv(pivoted, "data/output_pivoted.csv")
   }
   
+  openFilterByColNamesAndPivot <- function( csvToOpenData, vectorOfColNames, isVerbose = FALSE ) {
+    
+    # ================================================================
+    # IDENTIFY VARIABLES (By Year and Type)
+    #
+    #   @see https://www.statology.org/filter-rows-r/
+    # ================================================================ 
+    textInVariablesToSearch = paste(vectorOfColNames, sep=" ")
+    
+    variableList <- read.csv(csvToOpenData) 
+    
+    variableList <- filter(variableList, grepl(textInVariablesToSearch, Variable_Code) )
+    
+    if( isVerbose){
+      print(variableList)
+    }
+    
+    filteredByYear_VariableCode = variableList$Variable_Code
+    
+    if( isVerbose){
+      print(filteredByYear_VariableCode)
+    }
+    
+    # ================================================================
+    # PIVOT THE DATA
+    #
+    #   The data has a list of all the variables as rows, we need these as columns
+    #
+    #   @see https://tidyr.tidyverse.org/articles/pivot.html#wider
+    # ================================================================
+    pivoted <- pivot_wider(variableList, names_from = Variable_Code , values_from = Value)
+    # pivoted <- na.omit(pivoted)
+    # write.csv(pivoted, "data/output_pivoted.csv")
+  }
+  
+  interpInterveningYears <- function( tableToUse, varsToInterpolate ){
+    #@ https://stackoverflow.com/questions/33186316/linear-interpolate-missing-values-in-time-series
+    
+    #  @ see R example in RStudio after you type ?approx()
+    
+    # z <- zoo(c(2, NA, NA, NA, NA, 3), c(1, 3, 4, 6, 7, 8))
+    # z
+    # 
+    # ## use equidistant spacing
+    # na.approx(z, 1:6)
+    
+    
+    numVars <- length(varsToInterpolate)
+    s <- seq(1, numVars)
+    
+    tableToUse # return statement
+  }
   
   #Set the number of numeric digits to work with
   options(digits = 9)
   
   # get most of the variables
-  pivoted2015 = openFilterTwiceAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2015", NUMERIC_VARIABLES, TRUE);
-  write.csv(pivoted, "data/StateAndCountyData_pivoted.csv")
+  #pivoted2015 = openFilterTwiceAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2015", NUMERIC_VARIABLES, TRUE);
+  pivoted = openFilterByColNamesAndPivot( "data/StateAndCountyData.csv",  c("FFRPTH11", "FFRPTH16"), TRUE);
+  
+  
+  write.csv(pivoted, "data/StateAndCountyData_pivoted.2.csv")
   
   # get variables that have to be derived (the counts, minus the populationin the county)
   #pivoted2016 = openFilterTwiceAndPivot( "data/VariableList.csv", "data/StateAndCountyData.csv", "2016", c("Count"), FALSE);
   #pivotedPopulationPerCounty = openFilterAndPivot( "data/SupplementalDataCounty.csv", "2016", FALSE);
   socialDeprivationIndex = read.csv("data/ACS2015_countyallvars.csv") 
   
-  #merged_files<-merge(x=pivoted2015,y=socialDeprivationIndex,by="FIPS",all.x=FALSE, all.y=FALSE)
+  merged_files<-merge(x=pivoted2015,y=socialDeprivationIndex,by="FIPS",all.x=FALSE, all.y=FALSE)
   
   merged_files
   
   
   # ================================================================
-  # FILTER DATA BY ACCEPTABLE SKEWNESS
+  # Add a new column for Fast Food pct per 1000
+  # 
+  #   example column:
+  #   Fast-food restaurants/1,000 pop, 2011	Restaurant Availability and Expenditures	RESTAURANTS	Fast-food	FFRPTH11	CNTY10	# per 1,000 pop
+  #
   # ================================================================ 
   
-  # ignore the first 4 columns
-  newdata <- pivoted[,4:ncol(pivoted)]
-  newdata <- na.omit(newdata) # Get rid of rows with no data.
+  # HYPOTHESIS
+  # If a country has high Social Deprivation Indices, it will also have a higher ratio of Fast
+  # Food to Grocery stores as well.
+  # 
   
+  # add for fast food FFRPTH**  bewtween 2011 & 2016
+  dependentVars = merged_files[,"FFRPTH11"]
+  dependentVars = mutate(dependentVars, FFRPTH12 = NA ) 
+  dependentVars = mutate(dependentVars, FFRPTH13 = NA ) 
+  dependentVars = mutate(dependentVars, FFRPTH14 = NA ) 
+  dependentVars = mutate(dependentVars, FFRPTH15 = NA ) 
+  #dependentVars  = mutate(dependentVars,  merged_files[,"FFRPTH11"] ) 
+  dependentVars
+  
+  
+  # Add for grocery store GROC** bewtween 2011 & 2016
+  
+  # dependentVars = mutate(dependentVars, GROC12 = NA ) 
+  # dependentVars = mutate(dependentVars, GROC13 = NA ) 
+  # dependentVars = mutate(dependentVars, GROC14 = NA ) 
+  # dependentVars = mutate(dependentVars, GROC15 = NA ) 
+  
+  dependentVars
+  
+  # ================================================================
+  # Interpolate between the 2011 & 2016 Fast food columns to find 2015
+  # ================================================================ 
+  # @see https://stackoverflow.com/questions/33186316/linear-interpolate-missing-values-in-time-series
+  
+  
+  # merged_files = sapply( merged_files, interpInterveningYears, c("FFRPTH11", "FFRPTH12", "FFRPTH13", "FFRPTH14", "FFRPTH15", "FFRPTH16") )
+  # merged_files
+  
+  # ================================================================
+  # Interpolate between the 2011 & 2016 Grocery Store columns to find 2015
+  # ================================================================ 
+ 
+  
+  # ignore the first 4 columns
+  # newdata <- pivoted[,4:ncol(pivoted)]
+  # newdata <- na.omit(newdata) # Get rid of rows with no data.
+  # 
   #sapply(newdata, checkSkewness )
   
   # PCA=princomp(newdata,
