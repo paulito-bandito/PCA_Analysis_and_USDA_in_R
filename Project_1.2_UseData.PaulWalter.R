@@ -1,66 +1,53 @@
 # ================================================================
 # AUTHOR: Paul Walter
-# DATE:   10/27/2021 	 
-# ASSIGNMENT: Lab 4: Time Series
-# LEARNING OBJECTIVES:
-#   -	Review the concepts of regression.
-#   -	Review the concept of classic hypothesis testing.
-#   -	Develop a statistical model using a linear regression to describe the relationship between dependent and independent variables.
-#   -	Critically analyze the statistical model you developed. 
+# DATE:   11/28/2021 	 
+# ASSIGNMENT: Final Project, create usable data for my linear model
 # ================================================================
 
 #Load software packages 
 
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+library(psych)
+library(car)
+library(broom)
+library(foreign)
 
-	library(dplyr)
-	library(ggplot2)
-	library(corrplot)
-	library(psych)
-	library(car)
-	library(broom)
-	library(foreign)
-  library(forecast)
-  
-  # checking for skewness
-  # @ see https://www.datanovia.com/en/lessons/transform-data-to-normal-distribution-in-r/
-  library(moments)
+# ================================================================
+# Next, load your data:
+# ================================================================
 
-  # Pivot Tables (wider)
-  library(tidyr)
+#Load spreadsheet into data frame 
 
-
-  # PCA
-  library("FactoMineR")
-  library("factoextra")
+#Set your working directory, so R knows where to look for files. Choose the LAB2 folder you just made.
+# setwd(choose.dir())
+# setwd("d:\\rfiles\\myfiles")
 
 
-  # ================================================================
-  # METHODS
-  # ================================================================@ 
-  
-  ACCEPTABLE_SKEW = 1
-    
-  NUMERIC_VARIABLES = c('per 1,000 pop', 'Percent', 'Count', 'Dollars/capita', 'Dollars/store', "Dollars")
-  
-  # skewness(aboriginal_non_ratio, na.rm = TRUE)
-  checkSkewness <- function( vectorToCheck ) {
-    # last line is the return statement
-    #print(vectorToCheck)
-    skewness(vectorToCheck, na.rm = TRUE)
-  }
-  
-  # ================================================================
-  # LOAD DATA
-  # ================================================================@ 
-  
-  usdaData = read.csv("data/refined/StateAndCountyData_pivoted.colsRemoved.csv") 
-  #socialDeprivationIndex = read.csv("data/refined/ACS2015_countyallvars.csv") 
-  
-  # ================================================================
-  # CORRELATION
-  # ================================================================@ 
-  filteredData <- usdaData[,5:ncol(usdaData)]
-  
-  correlation_P <- cor(filteredData, use="complete.obs", method="pearson") 
-  write.csv(correlation_P, "data/refined/correlation_usdaData.csv") 
- 
+#Set the number of numeric digits to work with
+FOLDER_LOCATION = "data/refined2/"
+options(digits = 9)
+dataToUse <- read.csv("data/refined2/startingData.csv")
+#This reads your csv file into R and names it "data"
+attach(dataToUse) 
+
+# ================================================================
+# We will start our analysis in R at Step 2: Identify explanatory 
+# (i.e., independent) variables [x].
+# ================================================================
+
+#Calculate correlation between variables  23 - 35
+correlation_P <- cor(select(dataToUse,7, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35), use="complete.obs", method="pearson") 
+write.csv(correlation_P, "data/refined2/correlation_P.csv") 
+corrplot(correlation_P, type = "upper", order = "hclust", method = "color", 
+         tl.cex = 0.7, tl.col = "black", tl.srt = 45)
+
+print("Correlation plot written to file.")
+# # ================================================================
+# # Open up the spreadsheet "correlation_P.csv" and save is as an 
+# # Excel Workbook (.xlsx) use the Conditional Formatting tip 
+# # (see Step 2 above) to explore the correlation between variables.
+# # ================================================================
+# 
+# Section blank on purpose: read comment above. 
