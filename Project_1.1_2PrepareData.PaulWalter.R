@@ -85,22 +85,15 @@
     # 
     # ## use equidistant spacing
     # na.approx(z, 1:6)
-    
-    
-    # dont' change
-    newVect = vectorOfData[c("FFRPTH11","FFRPTH12","FFRPTH13","FFRPTH14","FFRPTH15","FFRPTH16")]
-    
-    #z <- zoo(newVect, c(1, 6, 2, 3, 4, 5))
-
-    ## use equidistant spacing
-    approximated = na.approx(newVect, 1:6)
-    
-    print(approximated[3])
-    
-    # vectorOfData[1, 4] <-
-    vectorOfData[9] = 0.555
-    
+    print("---")
     print(vectorOfData)
+    xn <- vectorOfData[4]
+    yn <- vectorOfData[5]
+    
+    print(xn)
+    print(yn)
+    print(vectorOfData)
+    print(approx(xn,yn) )
     
     vectorOfData
   }
